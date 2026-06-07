@@ -15,7 +15,8 @@ app.use(express.json());
 
 
 app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/workspaces', require('./routes/workspaceRoutes')); 
+app.use('/api/workspaces', require('./routes/workspaceRoutes'));
+app.use('/api/tasks', require('./routes/taskRoutes')); 
 
 
 app.get('/', (req, res) => {
