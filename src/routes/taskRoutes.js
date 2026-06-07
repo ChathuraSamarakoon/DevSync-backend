@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { createTask } = require('../controllers/taskController');
+const { createTask, getTasks } = require('../controllers/taskController');
 const { protect } = require('../middleware/authMiddleware');
 
+
 router.post('/', protect, createTask);
+router.get('/:workspaceId', protect, getTasks);
 
 module.exports = router;
