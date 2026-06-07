@@ -7,7 +7,6 @@ require('dotenv').config();
 
 connectDB();
 
-
 const app = express();
 
 
@@ -16,13 +15,15 @@ app.use(cors());
 app.use(express.json()); 
 
 
+app.use('/api/auth', require('./routes/authRoutes')); 
+
+
 app.get('/', (req, res) => {
     res.status(200).json({
         message: 'Welcome to DevSync API!',
         status: 'Server is running smoothly'
     });
 });
-
 
 const PORT = process.env.PORT || 5000;
 
