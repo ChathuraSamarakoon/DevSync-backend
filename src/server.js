@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const path = require('path'); 
 const connectDB = require('./config/db');
+const User = require('./models/User'); 
 require('dotenv').config();
 
 connectDB();
@@ -47,28 +48,59 @@ app.get('/', (req, res) => {
     });
 });
 
+
+const onlineUsers = new Map();
+
 io.on('connection', (socket) => {
-    console.log(`New client connected: ${socket.id}`);
+    console.log(`🟢 New client connected: ${socket.id}`);
 
 
-    socket.on('setup_user', (userId) => {
+    socket.on('setup_user', async (userId) => {
         socket.join(userId);
-        console.log(`👤 User Personal Room Joined: ${userId}`);
+        onlineUsers.set(socket.id, userId); 
+
+        try {
+            
+            await User.findByIdAndUpdate(userId, { status: 'online' });
+
+            
+            io.emit('user_status_change', { userId, status: 'online' });
+            console.log(`👤 User Online & Joined Personal Room: ${userId}`);
+        } catch (error) {
+            console.error("Error updating user status:", error);
+        }
     });
- 
 
     socket.on('join_channel', (channelId) => {
         socket.join(channelId);
         console.log(`User joined channel: ${channelId}`);
     });
 
-    socket.on('disconnect', () => {
-        console.log(`Client disconnected: ${socket.id}`);
+  
+    socket.on('disconnect', async () => {
+        console.log(`🔴 Client disconnected: ${socket.id}`);
+
+        const userId = onlineUsers.get(socket.id);
+
+        if (userId) {
+            try {
+                
+                await User.findByIdAndUpdate(userId, { status: 'offline' });
+
+                
+                io.emit('user_status_change', { userId, status: 'offline' });
+
+                onlineUsers.delete(socket.id);
+                console.log(`⚪ User Offline: ${userId}`);
+            } catch (error) {
+                console.error("Error updating offline status:", error);
+            }
+        }
     });
 });
 
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
-    console.log(`DevSync Server is running on port ${PORT}`);
+    console.log(`🚀 DevSync Server is running on port ${PORT}`);
 });
