@@ -21,19 +21,28 @@ const userSchema = new mongoose.Schema(
         },
         role: {
             type: String,
-            enum: ['user', 'admin'],
+            enum: ['user', 'admin', 'member', 'guest'],
             default: 'user',
         },
         avatar: {
             type: String,
             default: '',
+        },
+        
+        title: {
+            type: String, 
+            default: '', 
+        },
+        status: {
+            type: String,
+            enum: ['online', 'away', 'in-a-meeting', 'offline'],
+            default: 'offline',
         }
     },
     {
         timestamps: true, 
     }
 );
-
 
 const User = mongoose.model('User', userSchema);
 module.exports = User;
