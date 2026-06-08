@@ -48,22 +48,17 @@ app.get('/', (req, res) => {
     });
 });
 
-
 const onlineUsers = new Map();
 
 io.on('connection', (socket) => {
     console.log(`🟢 New client connected: ${socket.id}`);
-
 
     socket.on('setup_user', async (userId) => {
         socket.join(userId);
         onlineUsers.set(socket.id, userId); 
 
         try {
-            
             await User.findByIdAndUpdate(userId, { status: 'online' });
-
-            
             io.emit('user_status_change', { userId, status: 'online' });
             console.log(`👤 User Online & Joined Personal Room: ${userId}`);
         } catch (error) {
@@ -76,7 +71,17 @@ io.on('connection', (socket) => {
         console.log(`User joined channel: ${channelId}`);
     });
 
-  
+
+    socket.on('typing', (data) => {
+        socket.to(data.channelId).emit('typing', data);
+    });
+
+    
+    socket.on('stop_typing', (data) => {
+        socket.to(data.channelId).emit('stop_typing', data);
+    });
+    
+
     socket.on('disconnect', async () => {
         console.log(`🔴 Client disconnected: ${socket.id}`);
 
@@ -84,12 +89,8 @@ io.on('connection', (socket) => {
 
         if (userId) {
             try {
-                
                 await User.findByIdAndUpdate(userId, { status: 'offline' });
-
-                
                 io.emit('user_status_change', { userId, status: 'offline' });
-
                 onlineUsers.delete(socket.id);
                 console.log(`⚪ User Offline: ${userId}`);
             } catch (error) {
