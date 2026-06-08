@@ -1,28 +1,26 @@
 const Message = require('../models/Message');
 const Channel = require('../models/Channel');
 
-// @desc    Send a new message
-// @route   POST /api/messages
-// @access  Private
 const sendMessage = async (req, res) => {
     try {
         const { channelId, content } = req.body;
 
-        // Channel එක ඇත්තටම තියෙනවද කියලා බලනවා
         const channel = await Channel.findById(channelId);
         if (!channel) {
             return res.status(404).json({ message: 'Channel not found' });
         }
 
-        // Message එක save කරනවා
         const message = await Message.create({
             sender: req.user._id,
             channel: channelId,
             content,
         });
 
-        // පණිවිඩය යවපු කෙනාගේ නම වගේ විස්තරත් එක්කම response එක යවනවා (populate)
         const populatedMessage = await message.populate('sender', 'name avatar role status');
+
+
+        req.io.to(channelId).emit('new_message', populatedMessage);
+        
 
         res.status(201).json(populatedMessage);
     } catch (error) {
@@ -31,11 +29,9 @@ const sendMessage = async (req, res) => {
     }
 };
 
-
 const getMessages = async (req, res) => {
     try {
         const { channelId } = req.params;
-
 
         const messages = await Message.find({ channel: channelId })
             .populate('sender', 'name avatar role status')
