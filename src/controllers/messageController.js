@@ -3,7 +3,7 @@ const Channel = require('../models/Channel');
 
 const sendMessage = async (req, res) => {
     try {
-        const { channelId, content } = req.body;
+        const { channelId, content, attachment } = req.body; 
 
         const channel = await Channel.findById(channelId);
         if (!channel) {
@@ -13,15 +13,14 @@ const sendMessage = async (req, res) => {
         const message = await Message.create({
             sender: req.user._id,
             channel: channelId,
-            content,
+            content: content || '', 
+            attachment: attachment || null, 
         });
 
         const populatedMessage = await message.populate('sender', 'name avatar role status');
 
-
         req.io.to(channelId).emit('new_message', populatedMessage);
         
-
         res.status(201).json(populatedMessage);
     } catch (error) {
         console.error(`Error in sendMessage: ${error.message}`);

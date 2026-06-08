@@ -14,8 +14,11 @@ const messageSchema = new mongoose.Schema(
         },
         content: {
             type: String,
-            required: true,
-            trim: true,
+            default: '', 
+        },
+        attachment: {
+            type: String,
+            default: null, 
         },
     },
     {
