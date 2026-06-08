@@ -19,6 +19,7 @@ app.use('/api/workspaces', require('./routes/workspaceRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes')); 
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/channels', require('./routes/channelRoutes'));
+app.use('/api/messages', require('./routes/messageRoutes'));
 
 
 app.get('/', (req, res) => {
