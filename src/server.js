@@ -20,14 +20,11 @@ const io = new Server(server, {
     }
 });
 
-
 app.use(helmet({ crossOriginResourcePolicy: false })); 
 app.use(cors()); 
 app.use(express.json()); 
 
-
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
 
 app.use((req, res, next) => {
     req.io = io;
@@ -41,6 +38,7 @@ app.use('/api/messages', require('./routes/messageRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes')); 
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/dms', require('./routes/directMessageRoutes'));
 
 app.get('/', (req, res) => {
     res.status(200).json({
@@ -51,6 +49,13 @@ app.get('/', (req, res) => {
 
 io.on('connection', (socket) => {
     console.log(`New client connected: ${socket.id}`);
+
+
+    socket.on('setup_user', (userId) => {
+        socket.join(userId);
+        console.log(`👤 User Personal Room Joined: ${userId}`);
+    });
+ 
 
     socket.on('join_channel', (channelId) => {
         socket.join(channelId);
