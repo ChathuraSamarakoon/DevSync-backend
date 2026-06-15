@@ -11,7 +11,6 @@ require('dotenv').config();
 connectDB();
 
 const app = express();
-
 const server = http.createServer(app); 
 
 const io = new Server(server, {
@@ -42,10 +41,7 @@ app.use('/api/upload', require('./routes/uploadRoutes'));
 app.use('/api/dms', require('./routes/directMessageRoutes'));
 
 app.get('/', (req, res) => {
-    res.status(200).json({
-        message: 'Welcome to DevSync API!',
-        status: 'Server is running smoothly'
-    });
+    res.status(200).json({ message: 'Welcome to DevSync API!', status: 'Server is running smoothly' });
 });
 
 const onlineUsers = new Map();
@@ -54,37 +50,54 @@ io.on('connection', (socket) => {
     console.log(`🟢 New client connected: ${socket.id}`);
 
     socket.on('setup_user', async (userId) => {
-        socket.join(userId);
-        onlineUsers.set(socket.id, userId); 
+        const room = String(userId);
+        socket.join(room);
+        onlineUsers.set(socket.id, room); 
 
         try {
             await User.findByIdAndUpdate(userId, { status: 'online' });
             io.emit('user_status_change', { userId, status: 'online' });
-            console.log(`👤 User Online & Joined Personal Room: ${userId}`);
         } catch (error) {
             console.error("Error updating user status:", error);
         }
     });
 
+    // Channel ID එක අනිවාර්යයෙන්ම String එකක් බවට පත් කිරීම
     socket.on('join_channel', (channelId) => {
-        socket.join(channelId);
-        console.log(`User joined channel: ${channelId}`);
+        const room = String(channelId);
+        socket.join(room);
+        console.log(`User joined channel room: ${room}`);
     });
 
+    socket.on('leave_channel', (channelId) => {
+        const room = String(channelId);
+        socket.leave(room);
+        console.log(`User left channel room: ${room}`);
+    });
+
+    socket.on('send_message', (messageData) => {
+        // පණිවිඩය අයිති Channel ID එක අනිවාර්යයෙන්ම String එකක් බවට පත් කිරීම
+        const channelRoom = String(messageData.channelId || messageData.channel?._id || messageData.channel);
+        
+        console.log(`📩 Broadcasting message to room: ${channelRoom}`);
+        
+        if (channelRoom && channelRoom !== 'undefined') {
+            socket.to(channelRoom).emit('receive_message', messageData);
+        } else {
+            console.log("⚠️ Could not find valid channel room from:", messageData);
+        }
+    });
 
     socket.on('typing', (data) => {
-        socket.to(data.channelId).emit('typing', data);
+        socket.to(String(data.channelId)).emit('typing', data);
     });
-
     
     socket.on('stop_typing', (data) => {
-        socket.to(data.channelId).emit('stop_typing', data);
+        socket.to(String(data.channelId)).emit('stop_typing', data);
     });
-    
 
     socket.on('disconnect', async () => {
         console.log(`🔴 Client disconnected: ${socket.id}`);
-
         const userId = onlineUsers.get(socket.id);
 
         if (userId) {
@@ -92,7 +105,6 @@ io.on('connection', (socket) => {
                 await User.findByIdAndUpdate(userId, { status: 'offline' });
                 io.emit('user_status_change', { userId, status: 'offline' });
                 onlineUsers.delete(socket.id);
-                console.log(`⚪ User Offline: ${userId}`);
             } catch (error) {
                 console.error("Error updating offline status:", error);
             }
@@ -101,7 +113,6 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-
 server.listen(PORT, () => {
     console.log(`🚀 DevSync Server is running on port ${PORT}`);
 });

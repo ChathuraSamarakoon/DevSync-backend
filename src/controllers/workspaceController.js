@@ -1,6 +1,18 @@
 const Workspace = require('../models/Workspace');
 
 
+const getWorkspaces = async (req, res) => {
+    try {
+
+        const workspaces = await Workspace.find(); 
+        
+        res.status(200).json(workspaces);
+    } catch (error) {
+        console.error("Error fetching workspaces:", error);
+        res.status(500).json({ message: "Server error fetching workspaces" });
+    }
+};
+
 const createWorkspace = async (req, res) => {
     try {
         const { name } = req.body;
@@ -16,7 +28,6 @@ const createWorkspace = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
-
 
 const deleteWorkspace = async (req, res) => {
     try {
@@ -34,4 +45,5 @@ const deleteWorkspace = async (req, res) => {
     }
 };
 
-module.exports = { createWorkspace, deleteWorkspace };
+
+module.exports = { createWorkspace, deleteWorkspace, getWorkspaces };
