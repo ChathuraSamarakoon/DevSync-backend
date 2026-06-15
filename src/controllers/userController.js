@@ -1,6 +1,5 @@
 const User = require('../models/User');
 
-
 const getUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
@@ -15,13 +14,11 @@ const getUserProfile = async (req, res) => {
     }
 };
 
-
 const updateUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
 
         if (user) {
-            
             user.name = req.body.name || user.name;
             user.title = req.body.title !== undefined ? req.body.title : user.title;
             user.status = req.body.status || user.status;
@@ -45,4 +42,20 @@ const updateUserProfile = async (req, res) => {
     }
 };
 
-module.exports = { getUserProfile, updateUserProfile };
+
+const getUsers = async (req, res) => {
+    try {
+        
+        const users = await User.find().select('-password');
+        res.status(200).json(users);
+    } catch (error) {
+        console.error(`Error in getUsers: ${error.message}`);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+module.exports = { 
+    getUserProfile, 
+    updateUserProfile, 
+    getUsers 
+};
