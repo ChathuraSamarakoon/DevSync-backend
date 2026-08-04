@@ -14,7 +14,7 @@
     "project-management",
     "backend"
   ],
-  "author": "Avishka",
+  "author": "Chathura",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^3.0.3",
